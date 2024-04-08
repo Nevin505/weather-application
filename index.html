@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather-Api</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://kit.fontawesome.com/fa7595fb8b.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div
+      class="width:100vw min-h-dvh flex flex-col items-center gap-12  border-2 border-cyan-500"
+    >
+      <div
+        class="flex flex-wrap w-1/2 my-12 rounded-lg p-8 max-[600px]:w-full"
+        style="background-color: var(--primary)"
+      >
+        <div style="text-align: center; width: 100%;">
+            <h1 class="text-xl uppercase">Weather Forecast</h1>
+            <p>Date: <span id="dates"></span></p>
+        </div>
+
+        <div class="w-full flex relative p-4 gap-2">
+          <input
+            type="text"
+            id="inputSearch"
+            class="flex-1 h-10 text-center rounded-full w-full"
+            placeholder="Search Places"
+          />
+
+          <button
+            class="basis-10 bg-red-300 rounded-full p-2"
+            onclick="inputChangeHandler()"
+          >
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </div>
+        <div class="flex justify-center gap-4  mx-auto cursor-pointer" onclick="currentLocationHandler()">
+          <span class="p-2">  Or Use Current Location </span> <button><i class="fa-solid fa-location-crosshairs  fa-2x"></i></button>
+        </div>
+ <div id="result" class="mx-auto" style="display: none;" >
+    <div class="flex flex-col p-4 items-center text-center w-full" >
+        <div class="rounded-full  overflow-hidden  w-28 h-28  ">
+            <img class="object-cover" src="./Assets/cloudySun.jpg"  id="weather">
+        </div>
+
+        <p id="description"></p>
+      <p class="p-2">Location: <span id="locations"></span></p>
+      <p class="p-2">Temperature: <span id="temperature"></span></p>
+      <p class="p-2">Feels Like: <span id="feelsLike"></span></p>
+      <div class="flex flex-wrap w-full ">
+        <div class="basis-56  flex justify-center items-center  border-2 border-blue-200 p-4 flex-1 max[800px]:p-1">
+          <i class="fa-solid fa-water px-2"></i>humidity: 
+          <span id="humidity"></span>
+        </div>
+        <div class="basis-56  flex justify-center items-center  border-2 border-blue-200 p-4 flex-1 max[800px]:p-1 ">
+          <i class="fa-solid fa-wind px-2"></i>Wind-Speed: 
+          <span id="windSpeed"></span> 
+        </div>
+        <div class="basis-56 flex justify-center items-center border-2 border-blue-200 p-4 flex-1 max[800px]:p-1">
+          <i class="fa-brands fa-wpressr px-2"></i>Pressure: 
+          <span id="pressure"></span>
+        </div>
+      </div>
+    </div>
+ </div>
+        <div
+          class="flex flex-col p-4 w-full text-center"
+          id="notfound"
+          style="display: none"
+        >
+          <p>
+            <i class="fa-solid fa-location-dot"></i>
+            <i class="fa-solid fa-exclamation px-2"></i>Not Found
+          </p>
+
+          <p id="notFoundCity">Search For another Location</p>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    const date = new Date();
+
+
+   const hour=date.getHours()>12?date.getHours()-12:date.getHours();
+
+    dates.innerHTML = ` ${hour} : ${date.getMinutes()}  ${date.getHours()>=12?'PM':'AM'}`;
+
+    function inputChangeHandler() {
+      let cityName;
+      const inputTag = document.getElementById("inputSearch");
+      cityName = inputTag.value;
+      const api = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=b55fa190a576211a227ec77c6ff79341`;
+      if(cityName.trim()){
+        fetch(api)
+        .then((response) => {
+            if(!response.ok){
+                throw new Error(response.statusText);
+            }
+              return response.json();
+        })
+        .then((data) => {   
+           document.getElementById('result').style.display='block'
+           document.getElementById("notfound").style.display = "none";
+        //   result.style.display = "block";
+          locations.innerHTML = data?.name;
+          temperature.innerHTML = `${Math.floor(data?.main?.temp-273.15)} C`
+          feelsLike.innerHTML = `${Math.floor(data?.main?.feels_like-273.15)} C`;
+          humidity.innerHTML =`${ data?.main?.humidity} %`;
+          windSpeed.innerHTML = `${data?.wind?.speed} mph`;
+          pressure.innerHTML = `${data?.main?.pressure} mb`;
+          description.innerHTML=data?.weather[0].description;
+           if(data.weather[0].main=='clouds'){
+          weather.src="./Assets/cloudySun.jpg"
+           }
+           else  if(data.weather[0].main=='Haze'){
+          weather.src="./Assets/haze.png"
+           }
+           else {
+          weather.src="./Assets/cloudy.png"
+
+           }
+
+        })
+        .catch((error) => {
+           document.getElementById('result').style.display='none'
+            document.getElementById("notfound").style.display = "block";
+            notFoundCity.innerHTML=error.message;
+        });
+      }
+      else{
+        
+        document.getElementById('result').style.display='none'
+           document.getElementById("notfound").style.display = "none";
+        alert("Please Enter A City")
+      }
+    }
+
+    function currentLocationHandler(){
+        if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else {
+    alert("Geolocation is not supported by this browser.");
+  }
+
+    }
+
+
+function showPosition(position) {
+
+  const api=`https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=b55fa190a576211a227ec77c6ff79341`
+
+  fetch(api)
+        .then((response) => {
+            if(!response.ok){
+                throw new Error(response.statusText);
+            }
+              return response.json();
+        })
+        .then((data) => {   
+           document.getElementById('result').style.display='block'
+           document.getElementById("notfound").style.display = "none";
+        //   result.style.display = "block";
+          locations.innerHTML = data?.name;
+          temperature.innerHTML = `${Math.floor(data?.main?.temp-273.15)} C`
+          feelsLike.innerHTML = `${Math.floor(data?.main?.feels_like-273.15)} C`;
+          humidity.innerHTML =`${ data?.main?.humidity} %`;
+          windSpeed.innerHTML = `${data?.wind?.speed} mph`;
+          pressure.innerHTML = `${data?.main?.pressure} mb`;
+          description.innerHTML=data?.weather[0].description;
+           if(data.weather[0].main=='clouds'){
+          weather.src="./Assets/cloudySun.jpg"
+           }
+           else  if(data.weather[0].main=='Haze'){
+          weather.src="./Assets/haze.png"
+           }
+           else {
+          weather.src="./Assets/cloudy.png"
+
+           }
+
+        })
+        .catch((error) => {
+           document.getElementById('result').style.display='none'
+            document.getElementById("notfound").style.display = "block";
+            notFoundCity.innerHTML=error.message;
+        });
+}
+  </script>
+</html>
